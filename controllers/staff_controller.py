@@ -1,5 +1,8 @@
 # Importing libraries
+from sqlalchemy import desc
+
 from dtos.auth_models import UserModel
+from helper.validation_helper import ValidationHelper
 from models.users_table import User
 from models.lawyers_table import Lawyers
 from helper.api_helper import APIHelper
@@ -11,16 +14,11 @@ from helper.hashing import Hash
 
 class StaffController:
     def create_staff(create_staff_request: CreateStaffRequest,user: UserModel,db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         #  Step 1: Get existing user
-        user_model = db.query(User).filter(User.id == create_staff_request.user_id).first()
-
-        if user_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.USER_NOT_FOUND')
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
@@ -51,32 +49,50 @@ class StaffController:
         )
         db.add(create_staff_model)
         db.commit()
-        return create_staff_model
+        response_data= create_staff_model
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     def read_all(user: UserModel, db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists
+        ValidationHelper.check_user_exists(user)
+        # check if user is lawyer or admin
+        ValidationHelper.check_user_role(["lawyer", "admin"], user)
 
+        if user.role=="lawyer":
         # get lawyer using logged in user
-        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked ==1:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
-        staff=db.query(Staff,User).join(
-            User,Staff.user_id==User.id
-        ).join(Lawyers,Staff.lawyerId==Lawyers.id).filter(Staff.lawyerId == lawyer.id,
-            Staff.isBlocked==0).all()
-        return [
-            {
-                "staff": staff,
-                "user": user
-            }
-            for staff, user in staff    
-        ]
+            if lawyer is None:
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            if lawyer.isBlocked ==1:
+                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+            staff=db.query(Staff,User).join(
+                User,Staff.user_id==User.id
+            ).join(Lawyers,Staff.lawyerId==Lawyers.id).filter(Staff.lawyerId == lawyer.id,
+                ).order_by(
+                desc(Staff.createdAt) ).all()
+            return [
+                {
+                    "staff": staff,
+                    "user": user
+                }
+                for staff, user in staff    
+            ]
+        elif user.role=="admin":
+            staff=db.query(Staff,User).join(
+                User,Staff.user_id==User.id
+            ).join(Lawyers,Staff.lawyerId==Lawyers.id).all()
+            return [
+                {
+                    "staff": staff,
+                    "user": user
+                }
+                for staff, user in staff    
+            ]
+        
 
     def update_staff(
         staff_id: int,
@@ -85,51 +101,80 @@ class StaffController:
     db: Session
     ):
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
-
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer or admin
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer","admin"],user) 
 
         if staff_model is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
-        lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+        if user.role=="lawyer":
+            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked == 1:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+            if lawyer is None:
+                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # block check
+            ValidationHelper.block_check(lawyer.isBlocked)
 
-        if staff_model.lawyerId==lawyer.id:
+            if staff_model.lawyerId==lawyer.id:
+                update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
+
+                for key, value in update_data.items():
+                    if hasattr(staff_model, key):
+                        setattr(staff_model, key, value)
+                
+                #  Update user fields
+                user_model = db.query(User).filter(User.id == Staff.user_id).first()
+                try:
+                    if user_model:
+                        if update_staff_request.name:
+                            user_model.name = update_staff_request.name
+                        if update_staff_request.phoneNumber:
+                            user_model.phoneNumber = update_staff_request.phoneNumber
+                        if update_staff_request.firstName:
+                            user_model.firstName = update_staff_request.firstName
+                        if update_staff_request.lastName:
+                            user_model.lastName = update_staff_request.lastName
+                        if update_staff_request.address:
+                            user_model.address = update_staff_request.address
+                        if update_staff_request.gender:
+                            user_model.gender = update_staff_request.gender
+                    db.commit()
+                    return {
+                        "lawyer": staff_model,
+                        "user": user_model
+                        }
+                except:
+                    return APIHelper.send_bad_request_error(errorMessageKey="translations.DB_ERROR")
+        elif user.role=="admin":
             update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
-
             for key, value in update_data.items():
                 if hasattr(staff_model, key):
                     setattr(staff_model, key, value)
-            
-            #  Update user fields
-            user_model = db.query(User).filter(User.id == staff_model.user_id).first()
-
-            if user_model:
-                if update_staff_request.name:
-                    user_model.name = update_staff_request.name
-                if update_staff_request.phoneNumber:
-                    user_model.phoneNumber = update_staff_request.phoneNumber
-                if update_staff_request.firstName:
-                    user_model.firstName = update_staff_request.firstName
-                if update_staff_request.lastName:
-                    user_model.lastName = update_staff_request.lastName
-                if update_staff_request.address:
-                    user_model.address = update_staff_request.address
-                if update_staff_request.gender:
-                    user_model.gender = update_staff_request.gender
-                # add more fields as needed
-
-            db.commit()
-            return {
-                "lawyer": staff_model,
-                "user": user_model
-                }
+                
+                #  Update user fields
+            user_model = db.query(User).filter(User.id == Staff.user_id).first()
+            try:
+                if user_model:
+                    if update_staff_request.name:
+                        user_model.name = update_staff_request.name
+                    if update_staff_request.phoneNumber:
+                        user_model.phoneNumber = update_staff_request.phoneNumber
+                    if update_staff_request.firstName:
+                        user_model.firstName = update_staff_request.firstName
+                    if update_staff_request.lastName:
+                        user_model.lastName = update_staff_request.lastName
+                    if update_staff_request.address:
+                        user_model.address = update_staff_request.address
+                    if update_staff_request.gender:
+                        user_model.gender = update_staff_request.gender
+                db.commit()
+                return {
+                    "lawyer": staff_model,
+                    "user": user_model
+                    }
+            except:
+                return APIHelper.send_bad_request_error(errorMessageKey="translations.DB_ERROR")
+       
 
     # delete the document
     def delete_staff(
@@ -137,10 +182,9 @@ class StaffController:
         user: UserModel ,
         db: Session
     ):
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
         if staff_model is None:
@@ -149,8 +193,8 @@ class StaffController:
 
         if lawyer is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked == 1:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+        # block check
+        ValidationHelper.block_check(lawyer.isBlocked)
 
         if staff_model.lawyerId==lawyer.id:
             db.delete(staff_model)
@@ -164,18 +208,17 @@ class StaffController:
     # Block staff
     def block_staff(client_id: int, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         if lawyer is None:
             return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
 
-        if lawyer.isBlocked == 1:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+        # block check
+        ValidationHelper.block_check(lawyer.isBlocked)
 
         staff = db.query(Staff).filter(Staff.id == client_id).first()
 

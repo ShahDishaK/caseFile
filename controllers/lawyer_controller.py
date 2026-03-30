@@ -1,5 +1,8 @@
 # Importing libraries
+from sqlalchemy import desc
+
 from dtos.auth_models import UserModel
+from helper.validation_helper import ValidationHelper
 from models.users_table import User
 from helper.api_helper import APIHelper
 from sqlalchemy.orm import Session
@@ -12,10 +15,9 @@ class LawyerController:
 
     def create_lawyer(create_lawyer_request: CreateLawyerRequest, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user) 
 
         try:
             #  Step 1: Create new user
@@ -53,29 +55,32 @@ class LawyerController:
                 errorMessageKey='translations.DB_ERROR'
             )
     def read_all(user: UserModel ,db: Session ):
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user) 
 
         lawyers = db.query(Lawyers, User).join(
                 User, Lawyers.userId == User.id
-            ).all()
+            ).order_by(
+                desc(Lawyers.createdAt) ).all()
 
-        return [
+        response_data= [
                 {
                     "lawyer": lawyer,
                     "user": user
                 }
                 for lawyer, user in lawyers
             ]
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     def update_lawyer(lawyer_id: int, update_lawyer_request: UpdateLawyerRequest, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user) 
 
         lawyer_model = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
@@ -107,20 +112,20 @@ class LawyerController:
                 user_model.gender = update_lawyer_request.gender
             # add more fields as needed
         db.commit()
-        return {
+        response_data= {
             "lawyer": lawyer_model,
             "user": user_model
             }
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
 
     def delete_lawyer(lawyer_id: int, user: UserModel, db: Session):
-
-            print("DELETE API HIT FOR ID:", lawyer_id)
-
-            if user is None:
-                return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-            if user.role!='admin':
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+            # check if user exists and is admin 
+            ValidationHelper.check_user_exists(user)
+            ValidationHelper.check_user_role(["admin"],user) 
 
             lawyer = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
@@ -131,19 +136,16 @@ class LawyerController:
 
             db.commit()
             db.refresh(lawyer)
-            
-            print("AFTER COMMIT:", lawyer.isDeleted)
-
             return APIHelper.send_success_response(successMessageKey='translations.SUCCESS')
+   
     def block_lawyer(lawyer_id: int, user: UserModel,db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user) 
 
         db.query(Lawyers).filter(Lawyers.id == lawyer_id).update(
-            {"isBlocked":1}
+            {"isBlocked":b'\x01'}
         )
 
         db.commit()

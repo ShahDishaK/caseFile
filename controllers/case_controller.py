@@ -1,5 +1,7 @@
 # Importing libraries
+from sqlalchemy import desc
 from dtos.auth_models import UserModel
+from helper.validation_helper import ValidationHelper
 from models.documents_table import Documents
 from models.tasks_table import Tasks
 from models.invoices_table import Invoices
@@ -17,12 +19,10 @@ class CaseController:
     #  CREATE CASE
     def create_case(create_case_request:CreateCaseRequest, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(
-                errorMessageKey='translations.UNAUTHORIZED'
-            )
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
+               
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()
@@ -32,11 +32,9 @@ class CaseController:
                 errorMessageKey='translations.LAWYER_NOT_FOUND'
             )
 
-        #  BLOCK CHECK
-        if lawyer.isBlocked == 1:
-            return APIHelper.send_forbidden_error(
-                errorMessageKey='translations.BLOCKED'
-            )
+        # block check
+        ValidationHelper.block_check(lawyer.isBlocked)
+
         try:
             case = Cases(
                 caseNumber=create_case_request.caseNumber,
@@ -56,9 +54,13 @@ class CaseController:
             db.commit()
             db.refresh(case)
 
-            return case
+            response_data={"case":case}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
         except SQLAlchemyError as e:
-            db.rollback()  # VERY IMPORTANT
+            db.rollback() 
             return APIHelper.send_bad_request_error(
                 errorMessageKey='translations.DB_ERROR'
             )
@@ -67,19 +69,16 @@ class CaseController:
     #  READ ALL CASES
     def read_all(user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(
-                errorMessageKey='translations.UNAUTHORIZED'
-            )
-        if user.role not in ['lawyer','staff']:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer and staff
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer","staff"],user) 
 
         # ================= LAWYER =================
         if user.role == 'lawyer':
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
-                Lawyers.isDeleted == 0
+                Lawyers.isDeleted == 0,
             ).first()
 
             if not lawyer:
@@ -87,17 +86,20 @@ class CaseController:
                     errorMessageKey='translations.LAWYER_NOT_FOUND'
                 )
 
-            if lawyer.isBlocked == 1:
-                return APIHelper.send_forbidden_error(
-                    errorMessageKey='translations.BLOCKED'
-                )
+            # block check
+            ValidationHelper.block_check(lawyer.isBlocked)
 
             cases = db.query(Cases).filter(
                 Cases.lawyerId == lawyer.id,
                 Cases.isDeleted ==0
-            ).all()
+            ).order_by(
+                desc(Cases.createdAt) ).all()
 
-            return cases
+            response_data={"cases":cases}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
         # ================= STAFF =================
         elif user.role == 'staff':
@@ -125,20 +127,22 @@ class CaseController:
             cases = db.query(Cases).filter(
                 Cases.id.in_(allowed_case_ids),
                 Cases.isDeleted == 0
-            ).all()
+            ).order_by(
+                desc(Cases.createdAt) ).all()
 
-            return cases
+            response_data={"cases":cases}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
 
     #  UPDATE CASE
     def update_case(case_id: int, update_case_request:UpdateCaseRequest, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(
-                errorMessageKey='translations.UNAUTHORIZED'
-            )
-        if user.role not in ['lawyer','staff']:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer and staff
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer","staff"],user) 
 
         case = db.query(Cases).filter(
             Cases.id == case_id,
@@ -163,10 +167,9 @@ class CaseController:
                     errorMessageKey='translations.LAWYER_NOT_FOUND'
                 )
 
-            if lawyer.isBlocked == 1:
-                return APIHelper.send_forbidden_error(
-                    errorMessageKey='translations.BLOCKED'
-                )
+            # block check
+            ValidationHelper.block_check(lawyer.isBlocked)
+
 
             if case.lawyerId != lawyer.id:
                 return APIHelper.send_forbidden_error(
@@ -213,21 +216,19 @@ class CaseController:
         db.commit()
         db.refresh(case)
 
-        return case
+        response_data={"case":case}
+        return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
 
 
     #  SOFT DELETE
     def soft_delete_case(case_id: int, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(
-                errorMessageKey='translations.UNAUTHORIZED'
-            )
-
-        if user.role != 'lawyer':
-            return APIHelper.send_forbidden_error(
-                errorMessageKey='translations.FORBIDDEN'
-            )
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
@@ -238,10 +239,9 @@ class CaseController:
                 errorMessageKey='translations.LAWYER_NOT_FOUND'
             )
 
-        if lawyer.isBlocked == 1:
-            return APIHelper.send_forbidden_error(
-                errorMessageKey='translations.BLOCKED'
-            )
+        # block check
+        ValidationHelper.block_check(lawyer.isBlocked)
+
 
         case = db.query(Cases).filter(
             Cases.id == case_id,
@@ -282,8 +282,11 @@ class CaseController:
 
             db.commit()
 
-            return {"message": "Case and related data soft deleted successfully"}
-
+            response_data= {"message": "Case and related data soft deleted successfully"}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
         except Exception as e:
             db.rollback()
             return APIHelper.send_bad_request_error(

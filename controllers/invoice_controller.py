@@ -1,8 +1,9 @@
+from helper.validation_helper import ValidationHelper
 from models.clients_table import Clients
 import stripe
 from datetime import datetime
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import desc, func
 from fastapi import HTTPException, Request
 from dtos.invoice_models import InvoiceModel, UpdateInvoiceRequest
 from models.invoices_table import Invoices, InvoiceStatus
@@ -22,10 +23,9 @@ class InvoiceController:
 
     # ================= LAWYER CREATES INVOICE =================
     def create_invoice(create_invoice_request: InvoiceModel, user: User, db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
@@ -49,14 +49,17 @@ class InvoiceController:
         db.commit()
         db.refresh(invoice)
 
-        return invoice
+        response_data={"invoice":invoice}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     # ================= CREATE STRIPE PAYMENT SESSION =================
     def create_payment_session(invoice_id: int, user: User, db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
-        if user.role!='client':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is client 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["client"],user) 
 
         invoice = db.query(Invoices).filter(
             Invoices.id == invoice_id,
@@ -122,7 +125,7 @@ class InvoiceController:
             invoice = db.query(Invoices).filter(Invoices.id == int(invoice_id)).first()
 
             if invoice:
-                invoice.status = InvoiceStatus.paid
+                invoice.status = "paid"
                 invoice.paymentStatus = "success"
                 invoice.stripePaymentIntentId = session.get("payment_intent")
                 invoice.paymentMethod = "card"
@@ -146,10 +149,9 @@ class InvoiceController:
 
     # ================= READ INVOICES =================
     def read_all(user: User, db: Session, status: str = None):
-        if user is None:
-            return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
-        if user.role not in [UserRole.LAWYER, UserRole.CLIENT, UserRole.ADMIN]:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer","client","admin"],user) 
 
         if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
@@ -174,14 +176,18 @@ class InvoiceController:
             except ValueError:
                 raise HTTPException(status_code=400, detail="Invalid status")
 
-        return query.all()
+        response_data=query.order_by(
+                desc(Invoices.createdAt) ).all()
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     # ================= UPDATE INVOICE =================
     def update_invoice(invoice_id: int, update_invoice_request: UpdateInvoiceRequest, user: User, db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
@@ -214,10 +220,9 @@ class InvoiceController:
 
     # ================= DELETE INVOICE =================
     def delete_invoice(invoice_id: int, user: User, db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
-        if user.role!='lawyer':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is lawyer 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         if not lawyer:
@@ -238,14 +243,17 @@ class InvoiceController:
         db.delete(invoice)
         db.commit()
 
-        return {"message": "Invoice deleted successfully"}
+        response_data= {"message": "Invoice deleted successfully"}
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )
 
     # ================= ADMIN TOTALS =================
     def get_admin_invoice_totals(user: User, db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error('translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin 
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user) 
 
         total_paid = db.query(func.sum(Invoices.totalAmount)) \
             .filter(Invoices.status == InvoiceStatus.paid).scalar() or 0
@@ -255,8 +263,12 @@ class InvoiceController:
 
         invoices = db.query(Invoices).filter(Invoices.isDeleted==0).all()
 
-        return {
+        response_data= {
             "invoices": invoices,
             "total_paid": float(total_paid),
             "total_pending": float(total_pending)
         }
+        return APIHelper.send_success_response(
+                    data=response_data,
+                    successMessageKey='translations.SUCCESS'
+                )

@@ -1,5 +1,6 @@
 # Importing libraries
 from dtos.auth_models import UserModel
+from helper.hashing import Hash
 from models.companies_table import Companies
 from models.users_table import User, UserRole
 from helper.api_helper import APIHelper
@@ -11,14 +12,17 @@ from datetime import datetime, timedelta
 from models.cases_table import Cases, CaseStatus
 from sqlalchemy import  func
 from models.tasks_table import Tasks, TaskStatus
+from dtos.admin_models import AdminModel as CreateAdminRequest
+from models.users_table import User
+from helper.validation_helper import ValidationHelper
 
 class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts
     def get_case_counts(user: UserModel,db: Session):
-        if user is None :
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user)
+
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         
         open_cases = db.query(func.count(Cases.id)).filter(
@@ -36,34 +40,43 @@ class AdminController:
             Cases.isDeleted ==b'\x00'
         ).scalar()
 
-        return {
+        response_data= {
             "openCases": open_cases,
             "closedCases": closed_cases,
             "newCasesLast30Days": new_cases
         }
+        return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
+
     
     # case status count
     def get_case_status_count(user:UserModel,db:Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
-        last_thirty_days=datetime.utcnow()-timedelta(days=30)
+        # check if user exists and is admin
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user)
         
+        last_thirty_days=datetime.utcnow()-timedelta(days=30)
         closed_last_30_days=db.query(func.count(CaseStatusHistories.id)).filter(
             CaseStatusHistories.updatedAt>=last_thirty_days,
         ).scalar()
 
-        return {
+        response_data= {
         "casesStatusChangeInLast30Days": closed_last_30_days
         }
+        return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
+
     
     # task count based on due
     def task_counts(user:UserModel,db: Session):
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user)
+        
         pending_tasks = db.query(func.count(Tasks.id)).filter(
             Tasks.status == TaskStatus.PENDING
         ).scalar()
@@ -76,18 +89,23 @@ class AdminController:
             Tasks.status == TaskStatus.COMPLETED
         ).scalar()
 
-        return {
+        response_data={
             "pending": pending_tasks,
             "overdue": overdue_tasks,
             "completed": completed_tasks
         }
+        return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
+
     
     def company_users(company_id: int, user: UserModel, db: Session):
 
-        if user is None:
-            return APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-        if user.role!='admin':
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.FORBIDDEN')
+        # check if user exists and is admin
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user)
+
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
         if company is None:
@@ -103,9 +121,38 @@ class AdminController:
             User.role == UserRole.STAFF,
         ).all()
 
-        return {
+        response_data= {
             "companyId": company.id,
             "companyName": company.name,
             "lawyers": lawyers,
             "staff": staff
         }
+        return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
+
+    def create_admins(create_admin_request: CreateAdminRequest,user: UserModel, db: Session):
+        try:
+            admin=User(
+                name=create_admin_request.name,
+                firstName=create_admin_request.firstName,
+                lastName=create_admin_request.lastName,
+                email=create_admin_request.email,
+                password=Hash.get_hash(create_admin_request.password),
+                phoneNumber=create_admin_request.phoneNumber,
+                address=create_admin_request.address,
+                gender=create_admin_request.gender,
+                role="admin"
+            )
+            db.add(admin)
+            db.commit()
+            db.refresh(admin)  
+            response_data={"admin":admin}
+            return APIHelper.send_success_response(
+                data=response_data,
+                successMessageKey='translations.SUCCESS'
+            )
+        except:
+            db.rollback()
+            return APIHelper.send_bad_request_error(errorMessageKey="translations.BD_ERROR")

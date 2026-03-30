@@ -6,6 +6,7 @@ from config.db_config import get_db
 from fastapi import APIRouter,Depends
 from helper.token_helper import TokenHelper
 from controllers.admin_controller import AdminController
+from dtos.admin_models import AdminModel as CreateAdminRequest
 
 admin=APIRouter(
     prefix='/admins',
@@ -27,3 +28,7 @@ async def task_counts(user: UserModel = Depends(TokenHelper.get_current_user),db
 @admin.get("/dashboard/employees/{company_id}")
 async def comapny_users(company_id:int,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     return AdminController.company_users(company_id,user,db)
+
+@admin.post("/dashboard/")
+async def create_admins(create_admin_request:CreateAdminRequest,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    return AdminController.create_admins(create_admin_request,user,db)

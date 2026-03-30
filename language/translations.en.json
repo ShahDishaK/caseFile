@@ -1,6 +1,5 @@
 {
   "en": {
-    
     "SUCCESS": "success",
     "FAILURE": "failure",
     "UNAUTHORIZED": "You are unauthorized",
@@ -14,7 +13,7 @@
     "USER_NOT_FOUND":"can not find the user",
     "INVOICE_NOT_FOUND":"can not find invoice",
     "DOCUMENT_NOT_FOUND":"can not find the document",
-    "FORBIDDEN":"not allowded",
+    "FORBIDDEN":"Not Allowded",
     "BLOCKED":"Your account is blocked",
     "BLOCKED_OR_DELETED":"blocked or deleted",
     "NOT_ASSIGNED_TO_THIS_TASK":"You are not assigned to this task",
@@ -27,7 +26,7 @@
     "BLOCKED_OR_NOT_ASSIGENED_TO_HISTORY":"you are blocked or not assigned to this history",
     "NO_ACCESS_TO_THIS_DOCUMENT":"you don't have access to this document",
     "DB_ERROR":"database unique key or integrity failed",
-    "INVOICE_ALREADY_PAID":"This invoice is already paid"
-
+    "INVOICE_ALREADY_PAID":"This invoice is already paid",
+    "PASSWORD_CHANGED_SUCCESSFULL":"Password changed successfully"
   }
 }

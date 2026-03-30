@@ -2,9 +2,7 @@ from sqlalchemy.orm import Session
 from fastapi import Depends, APIRouter
 from passlib.context import CryptContext
 from config.db_config import  get_db
-from starlette import status
 from fastapi.security import OAuth2PasswordRequestForm, OAuth2PasswordBearer
-from dtos.auth_models import UserModel as CreateUserRequest
 from controllers.auth_controller import AuthController
 
 auth= APIRouter(prefix='/auth',tags=['Auth'])

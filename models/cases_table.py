@@ -9,6 +9,20 @@ class CaseStatus(str, Enum):
     closed = "closed"
     open = "open"
 
+class CaseType(str, Enum):
+    CIVIL = "civil"
+    CRIMINAL = "criminal"
+    FAMILY = "family"
+    CORPORATE = "corporate"
+    LABOR = "labor"
+    PROPERTY = "property"
+    TAX = "tax"
+    CONSUMER = "consumer"
+    IMMIGRATION = "immigration"
+    INTELLECTUAL_PROPERTY = "intellectual_property"
+    BANKRUPTCY = "bankruptcy"
+    ENVIRONMENTAL = "environmental"
+    OTHER = "other"
 
 class Cases(Base):
     __tablename__   ="cases"
@@ -16,7 +30,7 @@ class Cases(Base):
     id = Column(Integer, primary_key=True, index=True)
     caseNumber = Column(Integer, nullable=False,unique=True)
     title = Column(String(255), nullable=False)
-    type=Column(String(40),nullable=False)
+    type=Column(SQLEnum(CaseType),nullable=False)
     description = Column(String(255), nullable=False)
     caseStage=Column(String(50), nullable=False)
     caseCity=Column(String(50), nullable=False)
