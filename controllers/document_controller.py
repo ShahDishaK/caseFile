@@ -29,11 +29,6 @@ class DocumentController:
         user,
         db
     ):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         #  LAWYER CHECK
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
@@ -89,11 +84,6 @@ class DocumentController:
 
     #  READ ALL DOCUMENTS
     def read_all(user: UserModel, db: Session):
-
-        # check if user exists and is lawyer or staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer", "staff"], user)
-
         # ------------------- LAWYER -------------------
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(
@@ -177,11 +167,6 @@ class DocumentController:
     user,
     db
 ):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         document = db.query(Documents).filter(Documents.id == document_id,Documents.isDeleted==0).first()
 
         # check lawyer exists
@@ -248,11 +233,6 @@ class DocumentController:
 
     #  DELETE DOCUMENT
     def delete_document(document_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         document = db.query(Documents).filter(Documents.id == document_id,Documents.isDeleted==0).first()
 
         # check lawyer exists

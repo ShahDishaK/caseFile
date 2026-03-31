@@ -1,6 +1,5 @@
 # Importing libraries
 from sqlalchemy import desc
-
 from dtos.auth_models import UserModel
 from helper.validation_helper import ValidationHelper
 from models.users_table import User
@@ -14,11 +13,6 @@ from helper.hashing import Hash
 class LawyerController:
 
     def create_lawyer(create_lawyer_request: CreateLawyerRequest, user: UserModel, db: Session):
-
-        # check if user exists and is admin 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         try:
             #  Step 1: Create new user
             user_model = User(
@@ -55,10 +49,6 @@ class LawyerController:
                 errorMessageKey='translations.DB_ERROR'
             )
     def read_all(user: UserModel ,db: Session ):
-        # check if user exists and is admin 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         lawyers = db.query(Lawyers, User).join(
                 User, Lawyers.userId == User.id
             ).order_by(
@@ -77,11 +67,6 @@ class LawyerController:
                 )
 
     def update_lawyer(lawyer_id: int, update_lawyer_request: UpdateLawyerRequest, user: UserModel, db: Session):
-
-        # check if user exists and is admin 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         lawyer_model = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
         # check lawyer exists
@@ -123,10 +108,6 @@ class LawyerController:
 
 
     def delete_lawyer(lawyer_id: int, user: UserModel, db: Session):
-            # check if user exists and is admin 
-            ValidationHelper.check_user_exists(user)
-            ValidationHelper.check_user_role(["admin"],user) 
-
             lawyer = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
             # check lawyer exists
@@ -139,11 +120,6 @@ class LawyerController:
             return APIHelper.send_success_response(successMessageKey='translations.SUCCESS')
    
     def block_lawyer(lawyer_id: int, user: UserModel,db: Session):
-
-        # check if user exists and is admin 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         db.query(Lawyers).filter(Lawyers.id == lawyer_id).update(
             {"isBlocked":b'\x01'}
         )

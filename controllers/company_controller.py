@@ -11,10 +11,6 @@ from sqlalchemy.exc import SQLAlchemyError
 class CompanyController:
 
     def create_company(create_company_request: CompanyModel, user: UserModel, db: Session):
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         company = Companies(
             name=create_company_request.name,
             Address=create_company_request.Address,
@@ -33,10 +29,6 @@ class CompanyController:
                 )
    
     def read_all(user: UserModel, db: Session):
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         company= db.query(Companies).order_by(
                 desc(Companies.createdAt) ).all()
         response_data={"company":company}
@@ -47,11 +39,6 @@ class CompanyController:
 
 
     def update_company(company_id: int, update_company_request: UpdateCompanyRequest, user: UserModel, db: Session):
-
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"], user)
-
         try:
             company = db.query(Companies).filter(Companies.id == company_id).first()
 
@@ -78,10 +65,6 @@ class CompanyController:
                 errorMessageKey='translations.DB_ERROR'
             )
     def delete_company(company_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user)
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
         if company is None:

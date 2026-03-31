@@ -14,10 +14,6 @@ from dtos.courtsession_models import SessionModel as CreatSessionRequest
 class CourtSessionController:
 
     def create_document(create_session_request: CreatSessionRequest,user: UserModel,db: Session ):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -40,10 +36,6 @@ class CourtSessionController:
                 )
 
     def read_all(user: UserModel, db: Session):
-# check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()

@@ -8,6 +8,7 @@ from dtos.auth_models import UserModel
 from typing_extensions import Annotated
 from fastapi import APIRouter,Depends
 from starlette import status 
+from helper.validation_helper import ValidationHelper
 from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
 from fastapi.security import OAuth2PasswordBearer
@@ -18,25 +19,22 @@ router=APIRouter(
     tags=['users']
 )
 
-
-SECREAT_KEY='342e33d140d858d4eb74ae725b7d3a0fe4aa8dade3f6f435fae690b92b6f3001'
-ALGORITHM='HS256'
-
-bcrypt_context=CryptContext(schemes=["bcrypt"],deprecated="auto")
-
-oauth2_bearer=OAuth2PasswordBearer(tokenUrl='/auth/login')
 user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
 
 @router.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    ValidationHelper.check_user_exists(user)
+    ValidationHelper.check_user_role(["admin"],user) 
     return UserController.read_all(user,db)
 
 @router.get("/profile",status_code=status.HTTP_200_OK)
 async def get_user(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    ValidationHelper.check_user_exists(user)
     return UserController.get_user(user,db)
 
 @router.put("/change_password",status_code=status.HTTP_200_OK)
 async def change_password(user_verification: UserVerification,user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
+    ValidationHelper.check_user_exists(user)
     return UserController.change_password(user_verification,user,db)
 
 @router.put("/forgot_password", status_code=status.HTTP_200_OK)
@@ -45,4 +43,5 @@ async def forgot_password(user_verification: ForgotPassword, db: Session = Depen
 
 @router.patch   ("/updateProfile", status_code=status.HTTP_200_OK)
 async def update_profile(update_user_profile: UpdateUserProfile,user: UserModel = Depends(TokenHelper.get_current_user), db: Session = Depends(get_db)):
+    ValidationHelper.check_user_exists(user)
     return UserController.update_profile(update_user_profile,user,db)

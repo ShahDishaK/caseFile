@@ -22,10 +22,6 @@ from models.invoices_table import InvoiceStatus, Invoices
 class ClientController:
 
     def create_client(create_client_request: CreateClientRequest, user: UserModel, db: Session):
-        # check if user exists and is lawyer
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -74,11 +70,6 @@ class ClientController:
             return APIHelper.send_bad_request_error(errorMessageKey="translations.DB_ERROR")
 
     def read_all(user: UserModel, db: Session):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff","admin"],user) 
-
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
@@ -157,11 +148,6 @@ class ClientController:
             )
     #  UPDATE CLIENT
     def update_client(client_id: int, update_client_request: UpdateClientRequest, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff","admin"],user) 
-
         client = db.query(Clients).filter(Clients.id == client_id, Clients.isDeleted == 0).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(client,"CLIENT")
@@ -230,12 +216,6 @@ class ClientController:
 
     #  SOFT DELETE CLIENT
     def soft_delete_client(client_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
-
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()
@@ -305,11 +285,6 @@ class ClientController:
             )
     #  BLOCK CLIENT
     def block_client(client_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(lawyer,"LAWYER")

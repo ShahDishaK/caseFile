@@ -23,10 +23,6 @@ class InvoiceController:
 
     # ================= LAWYER CREATES INVOICE =================
     def create_invoice(create_invoice_request: InvoiceModel, user: User, db: Session):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -57,10 +53,6 @@ class InvoiceController:
 
     # ================= CREATE STRIPE PAYMENT SESSION =================
     def create_payment_session(invoice_id: int, user: User, db: Session):
-        # check if user exists and is client 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["client"],user) 
-
         invoice = db.query(Invoices).filter(
             Invoices.id == invoice_id,
             Invoices.clientId == Clients.id
@@ -149,10 +141,6 @@ class InvoiceController:
 
     # ================= READ INVOICES =================
     def read_all(user: User, db: Session, status: str = None):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","client","admin"],user) 
-
         if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
             # check lawyer exists
@@ -185,10 +173,6 @@ class InvoiceController:
 
     # ================= UPDATE INVOICE =================
     def update_invoice(invoice_id: int, update_invoice_request: UpdateInvoiceRequest, user: User, db: Session):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -221,10 +205,6 @@ class InvoiceController:
 
     # ================= DELETE INVOICE =================
     def delete_invoice(invoice_id: int, user: User, db: Session):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -253,10 +233,6 @@ class InvoiceController:
 
     # ================= ADMIN TOTALS =================
     def get_admin_invoice_totals(user: User, db: Session):
-        # check if user exists and is admin 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
-
         total_paid = db.query(func.sum(Invoices.totalAmount)) \
             .filter(Invoices.status == InvoiceStatus.paid).scalar() or 0
 

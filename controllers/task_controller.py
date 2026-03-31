@@ -15,10 +15,6 @@ from datetime import date
 class TaskController:
 
     def create_task(create_task_request: CreateTaskRequest, user: UserModel, db: Session):
-        # check if user exists and is lawyer or staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         task = Tasks(
             title=create_task_request.title,
             description=create_task_request.description,
@@ -40,9 +36,6 @@ class TaskController:
                 )
 
     def read_all(user: UserModel, db: Session):
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         today = date.today()
         updated=False
 
@@ -80,10 +73,6 @@ class TaskController:
         )
 
     def update_task(task_id: int, update_task_request: UpdateTaskRequest, user: UserModel, db: Session):
-        # check if user exists and is lawyer or staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         task = db.query(Tasks).filter(
             Tasks.id == task_id,
             Tasks.isDeleted == 0
@@ -115,10 +104,6 @@ class TaskController:
                 )
 
     def delete_task(task_id: int, user: UserModel, db: Session):
-        # check if user exists and is lawyer or staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         task = db.query(Tasks).filter(
             Tasks.id == task_id,
             Tasks.isDeleted == 0
@@ -141,11 +126,6 @@ class TaskController:
                 )
 
     def mark_as_done(task_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer or staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         task = db.query(Tasks).filter(
             Tasks.id == task_id,
             Tasks.isDeleted == 0

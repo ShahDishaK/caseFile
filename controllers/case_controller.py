@@ -18,10 +18,6 @@ class CaseController:
 
     #  CREATE CASE
     def create_case(create_case_request:CreateCaseRequest, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
                
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
@@ -66,11 +62,6 @@ class CaseController:
 
     #  READ ALL CASES
     def read_all(user: UserModel, db: Session):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         # ================= LAWYER =================
         if user.role == 'lawyer':
 
@@ -132,11 +123,6 @@ class CaseController:
 
     #  UPDATE CASE
     def update_case(case_id: int, update_case_request:UpdateCaseRequest, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         case = db.query(Cases).filter(
             Cases.id == case_id,
             Cases.isDeleted == 0
@@ -211,11 +197,6 @@ class CaseController:
 
     #  SOFT DELETE
     def soft_delete_case(case_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()

@@ -13,12 +13,7 @@ from dtos.caseStatusHistory_models import CaseStatusHistoryModel as CreateCaseRe
 class CaseController:
 
     #  CREATE
-    def create_case(create_case_request: CreateCaseRequest, user: UserModel, db: Session):
-
-       # check if user exists and is lawyer
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-      
+    def create_case(create_case_request: CreateCaseRequest, user: UserModel, db: Session):      
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()
@@ -52,11 +47,6 @@ class CaseController:
 
     #  READ ALL
     def read_all(user: UserModel, db: Session):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         # ================= LAWYER =================
         if user.role == 'lawyer':
 
@@ -115,11 +105,6 @@ class CaseController:
         user: UserModel,
         db: Session
     ):
-
-        # check if user exists and is lawyer and staff
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","staff"],user) 
-
         # ================= LAWYER =================
         if user.role == 'lawyer':
 
@@ -183,11 +168,6 @@ class CaseController:
 
     #  DELETE
     def delete_case(case_history_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()

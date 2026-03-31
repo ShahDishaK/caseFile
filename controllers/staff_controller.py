@@ -1,6 +1,5 @@
 # Importing libraries
 from sqlalchemy import desc
-
 from dtos.auth_models import UserModel
 from helper.validation_helper import ValidationHelper
 from models.users_table import User
@@ -14,10 +13,6 @@ from helper.hashing import Hash
 
 class StaffController:
     def create_staff(create_staff_request: CreateStaffRequest,user: UserModel,db: Session):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         #  Step 1: Get existing user
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -56,11 +51,6 @@ class StaffController:
                 )
 
     def read_all(user: UserModel, db: Session):
-        # check if user exists
-        ValidationHelper.check_user_exists(user)
-        # check if user is lawyer or admin
-        ValidationHelper.check_user_role(["lawyer", "admin"], user)
-
         if user.role=="lawyer":
         # get lawyer using logged in user
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
@@ -102,12 +92,7 @@ class StaffController:
     db: Session
     ):
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
-        # check if user exists and is lawyer or admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer","admin"],user) 
-
-        if staff_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
+        ValidationHelper.check_role_exists(staff_model,"STAFF")
         if user.role=="lawyer":
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -183,10 +168,6 @@ class StaffController:
         user: UserModel ,
         db: Session
     ):
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
         # check lawyer exists
         ValidationHelper.check_role_exists(staff_model,"STAFF")        
@@ -208,11 +189,6 @@ class StaffController:
 
     # Block staff
     def block_staff(client_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is lawyer 
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["lawyer"],user) 
-
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
         # check lawyer exists

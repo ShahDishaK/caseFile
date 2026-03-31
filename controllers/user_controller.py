@@ -22,9 +22,6 @@ oauth2_bearer=OAuth2PasswordBearer(tokenUrl='/auth/login')
 
 class UserController:
     def read_all(user: UserModel ,db: Session ):
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user) 
         users = db.query(User).order_by(
                 desc(User.createdAt) ).all()
         response_data= users
@@ -35,8 +32,6 @@ class UserController:
 
 
     def get_user(user: UserModel,db: Session):
-        # check if user exists
-        ValidationHelper.check_user_exists(user)
         user = db.query(User).filter(User.id == user.id).first()
         response_data= user
         return APIHelper.send_success_response(
@@ -45,8 +40,6 @@ class UserController:
                 )
 
     def change_password(user_verification: UserVerification,user: UserModel,db: Session ):
-        # check if user exists
-        ValidationHelper.check_user_exists(user)
         user_model = db.query(User).filter(User.id == user.id).first()
 
         if not bcrypt_context.verify(user_verification.password, user_model.password):
@@ -61,9 +54,6 @@ class UserController:
     def forgot_password(user_verification: ForgotPassword, db: Session):
         
         user_model = db.query(User).filter(User.email == user_verification.email).first()
-
-        # Check if the email matches
-        # check user exists
         ValidationHelper.check_role_exists(user_model,"USER")
         # Update password
         user_model.password = bcrypt_context.hash(user_verification.new_password)
@@ -78,7 +68,6 @@ class UserController:
 
     def update_profile(update_user_profile: UpdateUserProfile, user: UserModel, db: Session):
         # check if user exists
-        ValidationHelper.check_user_exists(user)
         user_model = db.query(User).filter(User.id == user.id).first()
 
         update_data = update_user_profile.dict(exclude_unset=True, exclude_none=True)

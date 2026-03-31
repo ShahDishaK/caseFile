@@ -18,11 +18,7 @@ from helper.validation_helper import ValidationHelper
 
 class AdminController:
     # open cases, closed cases, and new cases in the last 30 days counts
-    def get_case_counts(user: UserModel,db: Session):
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user)
-
+    def get_case_counts(user: UserModel,db: Session):       
         thirty_days_ago = datetime.utcnow() - timedelta(days=30)
         
         open_cases = db.query(func.count(Cases.id)).filter(
@@ -53,10 +49,6 @@ class AdminController:
     
     # case status count
     def get_case_status_count(user:UserModel,db:Session):
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user)
-        
         last_thirty_days=datetime.utcnow()-timedelta(days=30)
         closed_last_30_days=db.query(func.count(CaseStatusHistories.id)).filter(
             CaseStatusHistories.updatedAt>=last_thirty_days,
@@ -101,11 +93,6 @@ class AdminController:
 
     
     def company_users(company_id: int, user: UserModel, db: Session):
-
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user)
-
         company = db.query(Companies).filter(Companies.id == company_id).first()
 
         if company is None:
@@ -133,9 +120,6 @@ class AdminController:
             )
 
     def create_admins(create_admin_request: CreateAdminRequest,user: UserModel, db: Session):
-        # check if user exists and is admin
-        ValidationHelper.check_user_exists(user)
-        ValidationHelper.check_user_role(["admin"],user)
         try:
             admin=User(
                 name=create_admin_request.name,
