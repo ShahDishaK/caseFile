@@ -38,8 +38,8 @@ class DocumentController:
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             if lawyer.isBlocked ==0:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
@@ -101,10 +101,9 @@ class DocumentController:
                 Lawyers.isDeleted == 0
             ).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(
-                    errorMessageKey='translations.LAWYER_NOT_FOUND'
-                )
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
+
 
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
@@ -185,15 +184,15 @@ class DocumentController:
 
         document = db.query(Documents).filter(Documents.id == document_id,Documents.isDeleted==0).first()
 
-        if document is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(document,"DOCUMENT")
 
         # LAWYER CHECK
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
@@ -256,23 +255,23 @@ class DocumentController:
 
         document = db.query(Documents).filter(Documents.id == document_id,Documents.isDeleted==0).first()
 
-        if document is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.DOCUMENT_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(document,"DOCUMENT")
 
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
 
             case = db.query(Cases).filter(Cases.id == document.caseId).first()
 
-            if case.lawyerId != lawyer.id:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.NO_ACCESS_TO_THIS_DOCUMENT')
+            # chekck authorization
+            ValidationHelper.check_authorization(case.lawyerId, lawyer.id, "CASE")
 
         #  STAFF
         else:

@@ -84,10 +84,10 @@ class LawyerController:
 
         lawyer_model = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
-        if lawyer_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer_model,"LAWYER")
 
-        # 🔹 Update lawyer fields
+        # Update lawyer fields
         update_data = update_lawyer_request.dict(exclude_unset=True, exclude_none=True)
 
         for key, value in update_data.items():
@@ -129,8 +129,8 @@ class LawyerController:
 
             lawyer = db.query(Lawyers).filter(Lawyers.id == lawyer_id).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             lawyer.isDeleted = 1
 

@@ -21,8 +21,8 @@ class StaffController:
         #  Step 1: Get existing user
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
         #  Step 2: Update user details
         user_model = User(
@@ -65,10 +65,11 @@ class StaffController:
         # get lawyer using logged in user
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-            if lawyer.isBlocked ==1:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
+            # check blocked
+            ValidationHelper.block_check(lawyer.isBlocked)
+
             staff=db.query(Staff,User).join(
                 User,Staff.user_id==User.id
             ).join(Lawyers,Staff.lawyerId==Lawyers.id).filter(Staff.lawyerId == lawyer.id,
@@ -110,8 +111,8 @@ class StaffController:
         if user.role=="lawyer":
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
 
@@ -187,12 +188,12 @@ class StaffController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
-        if staff_model is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(staff_model,"STAFF")        
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
 
@@ -214,19 +215,19 @@ class StaffController:
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
 
         staff = db.query(Staff).filter(Staff.id == client_id).first()
 
-        if staff is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(staff,"STAFF")
 
-        if staff.lawyerId != lawyer.id:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ALLOWDED_TO_ACCESS_THIS_STAFF')
+        # chekck authorization
+        ValidationHelper.check_authorization(staff.lawyerId, lawyer.id, "STAFF")
 
         staff.isBlocked = 1
 

@@ -28,12 +28,12 @@ class InvoiceController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-        if not lawyer:
-            return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
-        if lawyer.isBlocked==1:
-            return APIHelper.send_forbidden_error('translations.BLOCKED')
-
+        # check blocked
+        ValidationHelper.block_check(lawyer.isBlocked)
+        
         invoice = Invoices(
             totalAmount=create_invoice_request.totalAmount,
             totalHours=create_invoice_request.totalHours,
@@ -69,8 +69,8 @@ class InvoiceController:
             return APIHelper.send_bad_request_error(
                     errorMessageKey="translations.INVOICE_ALREADY_PAID"
                         )
-        if not invoice:
-            return APIHelper.send_not_found_error('translations.INVOICE_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(invoice,"INVOICE")
 
         try:
             session = stripe.checkout.Session.create(
@@ -155,11 +155,11 @@ class InvoiceController:
 
         if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-            if not lawyer:
-                return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-            if lawyer.isBlocked==1:
-                return APIHelper.send_forbidden_error('translations.BLOCKED')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
+            # check blocked
+            ValidationHelper.block_check(lawyer.isBlocked)
             query = db.query(Invoices).filter(Invoices.lawyerId == lawyer.id,Invoices.isDeleted==0)
 
         elif user.role == UserRole.CLIENT:
@@ -190,17 +190,18 @@ class InvoiceController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-        if not lawyer:
-            return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked==1:
-            return APIHelper.send_forbidden_error('translations.BLOCKED')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
+        # check blocked
+        ValidationHelper.block_check(lawyer.isBlocked)
 
         invoice = db.query(Invoices).filter(Invoices.id == invoice_id,Invoices.isDeleted==0).first()
         if not invoice:
             return APIHelper.send_not_found_error('translations.INVOICE_NOT_FOUND')
 
-        if invoice.lawyerId != lawyer.id:
-            return APIHelper.send_forbidden_error('translations.NOT_YOUR_INVOICE')
+        # chekck authorization
+        ValidationHelper.check_authorization(invoice.lawyerId, lawyer.id, "INVOICE")
+
         if invoice.status==InvoiceStatus.paid:
             return APIHelper.send_bad_request_error(
                     errorMessageKey="translations.INVOICE_ALREADY_PAID"
@@ -225,17 +226,18 @@ class InvoiceController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-        if not lawyer:
-            return APIHelper.send_not_found_error('translations.LAWYER_NOT_FOUND')
-        if lawyer.isBlocked==1:
-            return APIHelper.send_forbidden_error('translations.BLOCKED')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
+        # check blocked
+        ValidationHelper.block_check(lawyer.isBlocked)
 
         invoice = db.query(Invoices).filter(Invoices.id == invoice_id,Invoices.isDeleted==0).first()
         if not invoice:
             return APIHelper.send_not_found_error('translations.INVOICE_NOT_FOUND')
 
-        if invoice.lawyerId != lawyer.id:
-            return APIHelper.send_forbidden_error('translations.NOT_YOUR_INVOICE')
+        # chekck authorization
+        ValidationHelper.check_authorization(invoice.lawyerId, lawyer.id, "INVOICE")
+
         if invoice.status==InvoiceStatus.paid:
             return APIHelper.send_bad_request_error(
                     errorMessageKey="translations.INVOICE_ALREADY_PAID"

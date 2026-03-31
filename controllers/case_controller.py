@@ -27,10 +27,8 @@ class CaseController:
             Lawyers.userId == user.id
         ).first()
 
-        if not lawyer:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.LAWYER_NOT_FOUND'
-            )
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
@@ -80,11 +78,8 @@ class CaseController:
                 Lawyers.userId == user.id,
                 Lawyers.isDeleted == 0,
             ).first()
-
-            if not lawyer:
-                return APIHelper.send_not_found_error(
-                    errorMessageKey='translations.LAWYER_NOT_FOUND'
-                )
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
@@ -108,10 +103,8 @@ class CaseController:
                 Staff.user_id == user.id
             ).all()
 
-            if not staff_records:
-                return APIHelper.send_not_found_error(
-                    errorMessageKey='translations.STAFF_NOT_FOUND'
-                )
+            # check staff exists
+            ValidationHelper.check_role_exists(staff_records,"STAFF")
 
             allowed_case_ids = [
                 staff.caseId
@@ -149,10 +142,8 @@ class CaseController:
             Cases.isDeleted == 0
         ).first()
 
-        if not case:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.CASE_NOT_FOUND'
-            )
+        # check case exists
+        ValidationHelper.check_role_exists(case,"CASE")
 
         # ================= LAWYER =================
         if user.role == 'lawyer':
@@ -162,19 +153,14 @@ class CaseController:
                 Lawyers.isDeleted == 0
             ).first()
 
-            if not lawyer:
-                return APIHelper.send_not_found_error(
-                    errorMessageKey='translations.LAWYER_NOT_FOUND'
-                )
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
 
-
-            if case.lawyerId != lawyer.id:
-                return APIHelper.send_forbidden_error(
-                    errorMessageKey='translations.NOT_ALLOWED_TO_ACCESS_THIS_CASE'
-                )
+            # chekck authorization
+            ValidationHelper.check_authorization(case.lawyerId, lawyer.id, "CASE")
 
         # ================= STAFF =================
         elif user.role == 'staff':
@@ -234,10 +220,9 @@ class CaseController:
             Lawyers.userId == user.id
         ).first()
 
-        if not lawyer:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.LAWYER_NOT_FOUND'
-            )
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
+
 
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
@@ -248,38 +233,34 @@ class CaseController:
             Cases.isDeleted == 0
         ).first()
 
-        if not case:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.CASE_NOT_FOUND'
-            )
+        # check case exists
+        ValidationHelper.check_role_exists(case,"CASE")
 
-        if case.lawyerId != lawyer.id:
-            return APIHelper.send_forbidden_error(
-                errorMessageKey='translations.NOT_ALLOWED'
-            )
+        # chekck authorization
+        ValidationHelper.check_authorization(case.lawyerId, lawyer.id, "CASE")
+
 
         try:
             # Soft delete case
-            case.isDeleted = 1
+            case.isDeleted = b'\x01'
 
             # Soft delete related data
 
             db.query(Documents).filter(
                 Documents.caseId == case_id
-            ).update({"isDeleted": 1})
+            ).update({"isDeleted": b'\x01'})
 
             db.query(Tasks).filter(
                 Tasks.caseId == case_id
-            ).update({"isDeleted": 1})
+            ).update({"isDeleted": b'\x01'})
 
             db.query(CaseStatusHistories).filter(
                 CaseStatusHistories.caseId == case_id
-            ).update({"isDeleted": 1})
+            ).update({"isDeleted": b'\x01'})
 
             db.query(Invoices).filter(
-                Invoices.caseId == case_id
-            ).update({"isDeleted": 1})
-
+                Invoices.caseId == case_id,Invoices.status != 'paid'
+            ).update({"isDeleted": b'\x01'})
             db.commit()
 
             response_data= {"message": "Case and related data soft deleted successfully"}

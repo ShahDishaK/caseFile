@@ -55,10 +55,8 @@ class CompanyController:
         try:
             company = db.query(Companies).filter(Companies.id == company_id).first()
 
-            if company is None:
-                return APIHelper.send_not_found_error(
-                    errorMessageKey='translations.COMPANY_NOT_FOUND'
-                )
+            # check COMPANY exists
+            ValidationHelper.check_role_exists(company,"COMPANY")
 
             update_data = update_company_request.dict(exclude_unset=True, exclude_none=True)
             print(update_data)

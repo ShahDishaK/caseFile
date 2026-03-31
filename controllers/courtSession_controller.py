@@ -19,6 +19,9 @@ class CourtSessionController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
+
         
         create_session_model = CourtSessions(
             sessionDate=create_session_request.sessionDate,
@@ -45,10 +48,9 @@ class CourtSessionController:
             Lawyers.userId == user.id
         ).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.LAWYER_NOT_FOUND'
-            )
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
+
 
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)

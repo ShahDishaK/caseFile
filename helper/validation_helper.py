@@ -26,4 +26,14 @@ class ValidationHelper:
             return APIHelper.send_forbidden_error(
                     errorMessageKey='translations.BLOCKED'
                 )
-
+    def check_role_exists(role,role_name:str):
+        if not role:
+                return APIHelper.send_not_found_error(
+                    errorMessageKey=f'translations.{role_name}_NOT_FOUND'
+                )
+        
+    def check_authorization(accessId, userId,action):
+        if accessId != userId:
+                return APIHelper.send_forbidden_error(
+                    errorMessageKey=f'translations.NOT_ALLOWED_TO_ACCESS_THIS_{action}'
+                )

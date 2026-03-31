@@ -40,56 +40,32 @@ class TaskController:
                 )
 
     def read_all(user: UserModel, db: Session):
-        # check if user exists and is lawyer or staff
         ValidationHelper.check_user_exists(user)
         ValidationHelper.check_user_role(["lawyer","staff"],user) 
 
-        if user.role == 'lawyer':
-            lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
+        today = date.today()
+        updated=False
 
-            if not lawyer:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
-
-            # block check
-            ValidationHelper.block_check(lawyer.isBlocked)
-
-        elif user.role == 'staff':
-            staff = db.query(Staff).filter(
-                Staff.user_id == user.id
-            ).first()
-
-            if not staff:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.STAFF_NOT_FOUND')
-
-            # block check
-            ValidationHelper.block_check(staff.isBlocked)
+        # Update status dynamically (not saving to DB)
         tasks = db.query(Tasks).filter(
-        Tasks.assignedTo == user.id,
-        Tasks.isDeleted == 0
-        ).order_by(
-                desc(Tasks.createdAt) ).all()
-
-        # 🔹 Counts 
-        pending_tasks = db.query(func.count(Tasks.id)).filter(
             Tasks.assignedTo == user.id,
-            Tasks.isDeleted == 0,
-            Tasks.status == TaskStatus.PENDING
-        ).scalar()
+            Tasks.isDeleted == 0
+        ).order_by(desc(Tasks.createdAt)).all()
 
-        overdue_tasks = db.query(func.count(Tasks.id)).filter(
-            Tasks.assignedTo == user.id,
-            Tasks.isDeleted == 0,
-            Tasks.status == TaskStatus.OVERDUE
-        ).scalar()
+        for task in tasks:
+            if task.status == TaskStatus.PENDING and task.dueDate:
+                if today > task.dueDate:
+                    task.status = TaskStatus.OVERDUE
+                    updated=True
+        if updated:
+            db.commit()
 
-        completed_tasks = db.query(func.count(Tasks.id)).filter(
-            Tasks.assignedTo == user.id,
-            Tasks.isDeleted == 0,
-            Tasks.status == TaskStatus.COMPLETED
-        ).scalar()
+        # Counts (dynamic)
+        pending_tasks = sum(1 for task in tasks if task.status == TaskStatus.PENDING)
+        overdue_tasks = sum(1 for task in tasks if task.status == TaskStatus.OVERDUE)
+        completed_tasks = sum(1 for task in tasks if task.status == TaskStatus.COMPLETED)
 
-        # 🔹 Final response
-        response_data= {
+        response_data = {
             "tasks": tasks,
             "summary": {
                 "pending": pending_tasks,
@@ -97,10 +73,11 @@ class TaskController:
                 "completed": completed_tasks
             }
         }
+
         return APIHelper.send_success_response(
-                    data=response_data,
-                    successMessageKey='translations.SUCCESS'
-                )
+            data=response_data,
+            successMessageKey='translations.SUCCESS'
+        )
 
     def update_task(task_id: int, update_task_request: UpdateTaskRequest, user: UserModel, db: Session):
         # check if user exists and is lawyer or staff
@@ -112,11 +89,11 @@ class TaskController:
             Tasks.isDeleted == 0
         ).first()
 
-        if not task:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.TASK_NOT_FOUND')
+        # check task exists
+        ValidationHelper.check_role_exists(task,"TASK")
 
-        if task.assignedTo != user.id:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ASSIGNED_TO_THIS_TASK')
+        # chekck authorization
+        ValidationHelper.check_authorization(task.assignedTo, user.id, "TASK")
 
         if task.status in [TaskStatus.COMPLETED, TaskStatus.OVERDUE]:
             return APIHelper.send_bad_request_error(
@@ -147,11 +124,11 @@ class TaskController:
             Tasks.isDeleted == 0
         ).first()
 
-        if not task:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.TASK_NOT_FOUND')
+        # check task exists
+        ValidationHelper.check_role_exists(task,"TASK")
 
-        if task.assignedTo != user.id:
-            return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ASSIGNED_TO_THIS_TASK')
+        # chekck authorization
+        ValidationHelper.check_authorization(task.assignedTo, user.id, "TASK")
 
         # Delete allowed even if completed
         db.delete(task)
@@ -174,18 +151,16 @@ class TaskController:
             Tasks.isDeleted == 0
         ).first()
 
-        if not task:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.TASK_NOT_FOUND'
-            )
+        # check task exists
+        ValidationHelper.check_role_exists(task,"TASK")
 
-        if task.assignedTo != user.id:
-            return APIHelper.send_forbidden_error(
-                errorMessageKey='translations.NOT_ASSIGNED_TO_THIS_TASK'
-            )
+
+        # chekck authorization
+        ValidationHelper.check_authorization(task.assignedTo, user.id, "TASK")
+
 
         # Prevent re-marking
-        if task.status in [TaskStatus.COMPLETED, TaskStatus.OVERDUE]:
+        if task.status in [TaskStatus.COMPLETED]:
             return APIHelper.send_bad_request_error(
                 errorMessageKey='translations.TASK_ALREADY_COMPLETED'
             )

@@ -63,8 +63,8 @@ class UserController:
         user_model = db.query(User).filter(User.email == user_verification.email).first()
 
         # Check if the email matches
-        if user_model is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.USER_NOT_FOUND')
+        # check user exists
+        ValidationHelper.check_role_exists(user_model,"USER")
         # Update password
         user_model.password = bcrypt_context.hash(user_verification.new_password)
         db.add(user_model)

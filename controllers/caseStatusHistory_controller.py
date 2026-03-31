@@ -23,8 +23,8 @@ class CaseController:
             Lawyers.userId == user.id
         ).first()
 
-        if not lawyer:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
         #  FIXED BLOCK CHECK
         if lawyer.isBlocked ==1:
@@ -65,8 +65,8 @@ class CaseController:
                 Lawyers.isDeleted==0
             ).first()
 
-            if not lawyer:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
@@ -99,8 +99,9 @@ class CaseController:
             ).order_by(
                 desc(CaseStatusHistories.createdAt) ).all()
 
-            if not histories:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGENED_TO_HISTORY')
+            # check if any histories are found
+            ValidationHelper.check_role_exists(histories,"HISTORIES")
+
             response_data={"sattus_histories":histories}
             return APIHelper.send_success_response(
                 data=response_data,
@@ -126,8 +127,9 @@ class CaseController:
                 Lawyers.userId == user.id
             ).first()
 
-            if not lawyer:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
+
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
 
@@ -139,9 +141,9 @@ class CaseController:
                 CaseStatusHistories.isDeleted==0
             ).first()
 
-            if not history:
-                APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-
+            # check history exists
+            ValidationHelper.check_role_exists(history,"HISTORY")
+            
 
         # ================= STAFF =================
         else:
@@ -157,9 +159,8 @@ class CaseController:
                 CaseStatusHistories.isDeleted==0
             ).first()
 
-            if not history:
-                APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
-
+            # check history exists
+            ValidationHelper.check_role_exists(history,"HISTORY")
 
         #  UPDATE DATA
         update_data = update_request.dict(
@@ -190,9 +191,8 @@ class CaseController:
         lawyer = db.query(Lawyers).filter(
             Lawyers.userId == user.id
         ).first()
-
-        if not lawyer:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
@@ -202,18 +202,18 @@ class CaseController:
                 CaseStatusHistories.isDeleted==0
         ).first()
 
-        if not history:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.HISTORY_NOT_FOUND')
+        # check history exists
+        ValidationHelper.check_role_exists(history,"HISTORY")
 
         case = db.query(Cases).filter(
             Cases.id == history.caseId
         ).first()
 
-        if not case:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.CASE_NOT_FOUND')
+        # check case exists
+        ValidationHelper.check_role_exists(case,"CASE")
 
-        if case.lawyerId != lawyer.id:
-            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        # chekck authorization
+        ValidationHelper.check_authorization(case.lawyerId, lawyer.id, "CASE")
 
 
         db.delete(history)

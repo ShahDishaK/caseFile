@@ -133,6 +133,9 @@ class AdminController:
             )
 
     def create_admins(create_admin_request: CreateAdminRequest,user: UserModel, db: Session):
+        # check if user exists and is admin
+        ValidationHelper.check_user_exists(user)
+        ValidationHelper.check_user_role(["admin"],user)
         try:
             admin=User(
                 name=create_admin_request.name,

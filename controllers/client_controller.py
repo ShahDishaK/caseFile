@@ -27,8 +27,8 @@ class ClientController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
@@ -82,12 +82,11 @@ class ClientController:
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
 
-            if lawyer.isBlocked ==1:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED')
-
+            # check blocked
+            ValidationHelper.block_check(lawyer.isBlocked)
 
             clients = db.query(Clients, User).join(
                 User, Clients.userId == User.id
@@ -124,10 +123,9 @@ class ClientController:
             ).order_by(
                 desc(Clients.createdAt) ).all()
 
-            if not clients:
-                return APIHelper.send_forbidden_error(
-                    errorMessageKey='translations.BLOCKED_OR_NOT_ASSINGED_CLIENT'
-                )
+            # check lawyer exists
+            ValidationHelper.check_role_exists(clients,"CLIENT")
+
 
             response_data= [
                 {
@@ -164,17 +162,18 @@ class ClientController:
         ValidationHelper.check_user_exists(user)
         ValidationHelper.check_user_role(["lawyer","staff","admin"],user) 
 
-        client = db.query(Clients).filter(Clients.id == client_id).first()
-        if client is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.CLIENT_NOT_FOUND')
-        if client.isDeleted==1 or client.isBlocked==1:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_DELETED')
+        client = db.query(Clients).filter(Clients.id == client_id, Clients.isDeleted == 0).first()
+        # check lawyer exists
+        ValidationHelper.check_role_exists(client,"CLIENT")
 
+        # check blocked
+        ValidationHelper.block_check(client.isBlocked)
         #  LAWYER
         if user.role == 'lawyer':
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-            if lawyer is None:
-                return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+            # check lawyer exists
+            ValidationHelper.check_role_exists(lawyer,"LAWYER")
+
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
 
@@ -188,9 +187,9 @@ class ClientController:
                 Staff.lawyerId == client.lawyerId,
                 Staff.isBlocked == 0,
             ).first()
-            if staff is None:
-                return APIHelper.send_forbidden_error(errorMessageKey='translations.BLOCKED_OR_NOT_ASSIGNED_TO_LAWYER')
-                
+            # check lawyer exists
+            ValidationHelper.check_role_exists(staff,"STAFF")
+    
             # block check
             ValidationHelper.block_check(lawyer.isBlocked)
 
@@ -241,11 +240,8 @@ class ClientController:
             Lawyers.userId == user.id
         ).first()
 
-        if lawyer is None:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.LAWYER_NOT_FOUND'
-            )
-
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
 
@@ -255,15 +251,11 @@ class ClientController:
             Clients.isDeleted == 0
         ).first()
 
-        if client is None:
-            return APIHelper.send_not_found_error(
-                errorMessageKey='translations.CLIENT_NOT_FOUND'
-            )
+        # check lawyer exists
+        ValidationHelper.check_role_exists(client,"CLIENT")
 
-        if client.lawyerId != lawyer.id:
-            return APIHelper.send_forbidden_error(
-                errorMessageKey='translations.NOT_ALLOWED'
-            )
+        # chekck authorization
+        ValidationHelper.check_authorization(client.lawyerId, lawyer.id, "CLIENT")
 
         try:
             # 1. Soft delete client
@@ -319,16 +311,16 @@ class ClientController:
         ValidationHelper.check_user_role(["lawyer"],user) 
 
         lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
-        if lawyer is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.LAWYER_NOT_FOUND')
+        # check lawyer exists
+        ValidationHelper.check_role_exists(lawyer,"LAWYER")
         # block check
         ValidationHelper.block_check(lawyer.isBlocked)
 
         client = db.query(Clients).filter(Clients.id == client_id).first()
-        if client is None:
-            return APIHelper.send_not_found_error(errorMessageKey='translations.CLIENT_NOT_FOUND')
-        if client.lawyerId != lawyer.id:
-            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        # check client exists
+        ValidationHelper.check_role_exists(client,"CLIENT")
+        # check authorization
+        ValidationHelper.check_authorization(client.lawyerId, lawyer.id, "CLIENT")
 
         client.isBlocked = 1
         db.commit()
