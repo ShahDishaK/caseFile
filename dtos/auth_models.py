@@ -1,16 +1,13 @@
+from pydantic import BaseModel, EmailStr, constr, validator
 from typing import Optional
-from pydantic import BaseModel
-from datetime import datetime
+from enum import Enum
 
 
 class UserModel(BaseModel):
-    id: str
-    email: str
-    is_admin: bool
-    created_at: datetime
-    updated_at: datetime
-
-
-class TokenModel(UserModel):
+    email: EmailStr
+    password: str
+    companyId:Optional[int]=None
+    
+class TokenModel(BaseModel):
     access_token: str
     token_type: Optional[str] = 'Bearer'

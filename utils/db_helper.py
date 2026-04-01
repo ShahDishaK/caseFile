@@ -1,12 +1,11 @@
 from config.db_config import engine
-from models.users_table import users_table
+from models.users_table import User 
 
 class DBHelper:
-    def get_user_by_email(email: str):
-        with engine.connect() as db:
-            return db.execute(users_table.select().where(users_table.c.email == email)).fetchone()
+    @staticmethod
+    def get_user_by_email(email: str,db):
+        return db.query(User).filter(User.email == email).first()
 
-    def get_user_by_id(id: int):
-        with engine.connect() as db:
-            return db.execute(users_table.select().where(
-                users_table.c.id == id)).fetchone()
+    @staticmethod
+    def get_user_by_id(id: int,db):
+        return db.query(User).filter(User.id == id).first()

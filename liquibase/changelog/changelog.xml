@@ -1,0 +1,1121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<databaseChangeLog
+     xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+     xsi:schemaLocation="
+     http://www.liquibase.org/xml/ns/dbchangelog
+     http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.3.xsd">
+
+
+<!-- ===================== -->
+<!-- COMPANIES -->
+<!-- ===================== -->
+
+<changeSet id="1-create-companies" author="disha">
+    <createTable tableName="companies">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="name" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="address" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="phoneNumber" type="VARCHAR(15)">
+            <constraints nullable="false" unique="true"/>
+        </column>
+
+        <column name="email" type="VARCHAR(255)"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+</changeSet>
+
+<!-- ===================== -->
+<!-- USERS -->
+<!-- ===================== -->
+
+<changeSet id="2-create-users" author="disha">
+
+    <createTable tableName="users">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="name" type="VARCHAR(255)">
+            <constraints nullable="false" unique="true"/>
+        </column>
+
+        <column name="firstName" type="VARCHAR(255)"/>
+        <column name="lastName" type="VARCHAR(255)"/>
+
+        <column name="email" type="VARCHAR(255)">
+            <constraints nullable="false" unique="true"/>
+        </column>
+
+        <column name="phoneNumber" type="VARCHAR(15)">
+            <constraints unique="true"/>
+        </column>
+
+        <column name="password" type="VARCHAR(255)"/>
+
+        <column name="address" type="VARCHAR(255)"/>
+
+        <column name="role" type="VARCHAR(50)"/>
+
+        <column name="companyId" type="INT"/>
+
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+
+        <column name="isBlocked" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="users"
+            baseColumnNames="companyId"
+            referencedTableName="companies"
+            referencedColumnNames="id"
+            constraintName="fk_users_company"/>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- CASES -->
+<!-- ===================== -->
+
+<changeSet id="3-create-cases" author="disha">
+
+    <createTable tableName="cases">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="caseNumber" type="INT">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="title" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="type" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="description" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseStage" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseCity" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="status" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseClosedDate" type="DATETIME"/>
+
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- LAWYERS -->
+<!-- ===================== -->
+
+<changeSet id="4-create-lawyers" author="disha">
+
+    <createTable tableName="lawyers">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="userId" type="INT">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="specialization" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="lawyers"
+            baseColumnNames="userId"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_lawyers_user"/>
+
+    <addForeignKeyConstraint
+            baseTableName="lawyers"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_lawyers_case"/>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- CLIENTS -->
+<!-- ===================== -->
+
+<changeSet id="5-create-clients" author="disha">
+
+    <createTable tableName="clients">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="crNumber" type="INT"/>
+        <column name="vatNumber" type="INT"/>
+        <column name="vatPercentage" type="INT"/>
+
+        <column name="caseId" type="INT"/>
+        <column name="lawyerId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="clients"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_clients_lawyer"/>
+
+    <addForeignKeyConstraint
+            baseTableName="clients"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_clients_case"/>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- TASKS -->
+<!-- ===================== -->
+
+<changeSet id="6-create-tasks" author="disha">
+
+    <createTable tableName="tasks">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="title" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="description" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseId" type="INT"/>
+        <column name="assignedTo" type="INT"/>
+
+        <column name="status" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- COURT SESSIONS -->
+<!-- ===================== -->
+
+<changeSet id="7-create-courtSessions" author="disha">
+
+    <createTable tableName="courtSessions">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="sessionDate" type="DATETIME">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="courtName" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseId" type="INT"/>
+        <column name="lawyerId" type="INT"/>
+        <column name="clientId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- DOCUMENTS -->
+<!-- ===================== -->
+
+<changeSet id="8-create-documents" author="disha">
+
+    <createTable tableName="documents">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="title" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="documentLink" type="VARCHAR(255)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="fileType" type="VARCHAR(50)">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="userId" type="INT">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME"
+                defaultValueComputed="CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="documents"
+            baseColumnNames="userId"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_documents_user"/>
+
+</changeSet>
+
+<!-- ===================== -->
+<!-- EXAMPLE -->
+<!-- ===================== -->
+
+<changeSet id="9-create-example" author="disha">
+
+    <createTable tableName="example">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+    </createTable>
+
+</changeSet>
+
+<!-- Add isBlocked column in  Clients-->
+<changeSet id="6-add-isBlocked-to-clients" author="disha">
+
+    <addColumn tableName="clients">
+
+        <column name="isBlocked" type="BOOLEAN" defaultValueBoolean="false">
+            <constraints nullable="false"/>
+        </column>
+
+    </addColumn>
+
+</changeSet>
+
+<!-- Add isDeleted column in  Clients-->
+<changeSet id="6-add-isDeleted-to-clients" author="disha">
+
+    <addColumn tableName="clients">
+
+        <column name="isDeleted" type="BOOLEAN" defaultValueBoolean="false">
+            <constraints nullable="false"/>
+        </column>
+
+    </addColumn>
+
+</changeSet>
+
+<!-- Add clientId column in Cases -->
+<changeSet id="3-add-clientId-to-cases" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="cases" columnName="clientId"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="cases">
+        <column name="clientId" type="INT" >
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+    <addForeignKeyConstraint
+        baseTableName="cases"
+        baseColumnNames="clientId"
+        referencedTableName="clients"
+        referencedColumnNames="id"
+        constraintName="fk_cases_client"/>
+</changeSet>
+
+<!-- Drop caseId from client -->
+<changeSet id="8-drop-caseId-from-clients" author="disha">
+
+    <!-- Drop foreign key constraint -->
+    <dropForeignKeyConstraint 
+        baseTableName="clients"
+        constraintName="fk_clients_case"/>
+
+    <!-- Drop the column -->
+    <dropColumn 
+        tableName="clients"
+        columnName="caseId"/>
+
+</changeSet>
+
+<!-- Add description column in Documents -->
+<changeSet id="8-add-description-to-documents" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="documents" columnName="description"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="documents">
+        <column name="description" type="VARCHAR(255)"/>
+    </addColumn>
+</changeSet>
+
+<!-- Add notes column in Documents -->
+<changeSet id="8-add-notes-to-documents" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="documents" columnName="notes"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="documents">
+        <column name="notes" type="VARCHAR(255)"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="10-add-clientId-to-documents" author="disha">
+    
+    <!-- Precondition to avoid duplicate column errors -->
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="documents" columnName="clientId"/>
+        </not>
+    </preConditions>
+
+    <!-- Add the column -->
+    <addColumn tableName="documents">
+        <column name="clientId" type="INT">
+            <constraints nullable="true"/> <!-- nullable true to prevent issues with existing data -->
+        </column>
+    </addColumn>
+
+    <!-- Add the foreign key -->
+    <addForeignKeyConstraint
+        baseTableName="documents"
+        baseColumnNames="clientId"
+        referencedTableName="clients"
+        referencedColumnNames="id"
+        constraintName="fk_documents_client"/>
+</changeSet>
+
+
+<changeSet id="9-drop-example" author="disha">
+
+    <dropTable tableName="example"/>
+
+</changeSet>
+
+<changeSet id="10-create-staff-table" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="staff"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="staff">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true" nullable="false"/>
+        </column>
+
+        <column name="user_id" type="INT">
+            <constraints nullable="false"/>
+        </column>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="taskId" type="INT"/>
+
+        <column name="isBlocked" type="BOOLEAN" defaultValueBoolean="false"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+</changeSet>
+
+<changeSet id="7-modify-courtSessions-session-columns" author="disha">
+
+    <!-- Change datatype of sessionDate -->
+    <modifyDataType 
+        tableName="courtSessions"
+        columnName="sessionDate"
+        newDataType="DATE"/>
+
+    <!-- Add sessionTime column -->
+    <addColumn tableName="courtSessions">
+        <column name="sessionTime" type="TIME"/>
+    </addColumn>
+
+</changeSet>
+<!-- Add isBlocked column in Lawyers -->
+<changeSet id="5-add-isBlocked-to-lawyers" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="lawyers" columnName="isBlocked"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="lawyers">
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="4-make-specialization-nullable" author="disha">
+
+    <dropNotNullConstraint
+            tableName="lawyers"
+            columnName="specialization"
+            columnDataType="VARCHAR(255)"/>
+
+</changeSet>
+
+<changeSet id="11-create-caseStatusHistories" author="disha">
+
+    <createTable tableName="caseStatusHistories">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="caseId" type="INT" />
+        <column name="oldStatus" type="VARCHAR(15)" />
+
+        <column name="newStatus" type="VARCHAR(15)" />
+
+         <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        
+    </createTable>
+    <addForeignKeyConstraint
+            baseTableName="caseStatusHistories"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_casehistories_caseid"/>
+
+</changeSet>
+
+
+
+<!-- BLOCK STAFF TABLE -->
+<changeSet id="12-create-blockedStaff" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="blockedStaff"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="blockedStaff">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="staffId" type="INT"/>
+
+        <column name="lawyerId" type="VARCHAR(15)"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedStaff"
+            baseColumnNames="staffId"
+            referencedTableName="staff"
+            referencedColumnNames="id"
+            constraintName="fk_blockstaff_staffId"/>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedStaff"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_blockstaff_lawyerId"/>
+
+</changeSet>
+
+
+
+<!-- BLOCK LAWYERS TABLE -->
+<changeSet id="13-create-blockedLawyers" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="blockedLawyers"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="blockedLawyers">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="lawyerId" type="VARCHAR(15)"/>
+
+        <column name="adminUserId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedLawyers"
+            baseColumnNames="adminUserId"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_blockLawyer_adminId"/>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedLawyers"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_blocklawyer_lawyerId"/>
+
+</changeSet>
+
+
+
+<!-- BLOCK CLIENTS TABLE -->
+<changeSet id="14-create-blockedClients" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="blockedClients"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="blockedClients">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="clientId" type="INT"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedClients"
+            baseColumnNames="clientId"
+            referencedTableName="clients"
+            referencedColumnNames="id"
+            constraintName="fk_blockclient_clientId"/>
+
+    <addForeignKeyConstraint
+            baseTableName="blockedClients"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_blockedclient_lawyerId"/>
+
+</changeSet>
+<changeSet id="15-fix-lawyerId-type-blockedTables" author="disha">
+
+    <modifyDataType 
+        tableName="blockedStaff"
+        columnName="lawyerId"
+        newDataType="INT"/>
+
+    <modifyDataType 
+        tableName="blockedLawyers"
+        columnName="lawyerId"
+        newDataType="INT"/>
+
+  
+
+</changeSet>
+<changeSet id="4-add-isBlocked-to-lawyers" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="lawyers" columnName="isBlocked"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="lawyers">
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="16-create-staff" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="staff"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="staff">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="userId" type="INT"/>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="taskId" type="INT"/>
+
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="userId"
+            referencedTableName="users"
+            referencedColumnNames="id"
+            constraintName="fk_userId_staff"/>
+
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_staff"/>
+
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_staff"/>
+    <addForeignKeyConstraint
+            baseTableName="staff"
+            baseColumnNames="taskId"
+            referencedTableName="tasks"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_staff"/>
+
+</changeSet>
+
+<changeSet id="4-add-isBlocked-to-staff" author="disha" runOnChange="true">
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <columnExists tableName="staff" columnName="isBlocked"/>
+        </not>
+    </preConditions>
+
+    <addColumn tableName="staff">
+        <column name="isBlocked" type="Boolean" defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+
+<changeSet id="17-move-case-relation-to-cases" author="disha">
+
+    <!-- Add lawyerId column to cases -->
+    <addColumn tableName="cases">
+        <column name="lawyerId" type="INT"/>
+    </addColumn>
+
+    <!-- Add foreign key from cases.lawyerId -> lawyers.id -->
+    <addForeignKeyConstraint
+        baseTableName="cases"
+        baseColumnNames="lawyerId"
+        referencedTableName="lawyers"
+        referencedColumnNames="id"
+        constraintName="fk_cases_lawyer"/>
+
+    <!-- Remove foreign key from lawyers.caseId -->
+    <dropForeignKeyConstraint
+        baseTableName="lawyers"
+        constraintName="fk_lawyers_case"/>
+
+    <!-- Remove caseId column from lawyers table -->
+    <dropColumn
+        tableName="lawyers"
+        columnName="caseId"/>
+
+</changeSet>
+
+<changeSet id="17-create-invoices" author="disha">
+
+    <preConditions onFail="MARK_RAN">
+        <not>
+            <tableExists tableName="invoices"/>
+        </not>
+    </preConditions>
+
+    <createTable tableName="invoices">
+
+        <column name="id" type="INT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+        </column>
+
+        <column name="totalHours" type="DECIMAL(10,2)"/>
+
+        <column name="totalAmount" type="DECIMAL(10,2)"/>
+
+        <column name="lawyerId" type="INT"/>
+
+        <column name="clientId" type="INT"/>
+
+        <column name="caseId" type="INT"/>
+
+        <column name="companyId" type="INT"/>
+
+        <column name="status" type="VARCHAR(50)"/>
+
+        <column name="createdAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+        <column name="updatedAt" type="DATETIME" defaultValueComputed="CURRENT_TIMESTAMP"/>
+
+    </createTable>
+
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="lawyerId"
+            referencedTableName="lawyers"
+            referencedColumnNames="id"
+            constraintName="fk_lawyerId_invoices"/>
+
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="clientId"
+            referencedTableName="clients"
+            referencedColumnNames="id"
+            constraintName="fk_clientId_invoices"/>
+
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="caseId"
+            referencedTableName="cases"
+            referencedColumnNames="id"
+            constraintName="fk_casesId_ivoices"/>
+    <addForeignKeyConstraint
+            baseTableName="invoices"
+            baseColumnNames="companyId"
+            referencedTableName="companies"
+            referencedColumnNames="id"
+            constraintName="fk_companiesId_invoices"/>
+
+</changeSet>
+
+<changeSet id="18-drop-unique-name-users" author="disha">
+
+    <dropUniqueConstraint
+        tableName="users"
+        constraintName="name"/>
+
+</changeSet>
+
+<changeSet id="19-add-isDeleted-to-lawyers" author="disha">
+
+    <addColumn tableName="lawyers">
+
+        <column name="isDeleted" type="BOOLEAN" defaultValueBoolean="false">
+        </column>
+
+    </addColumn>
+
+</changeSet>
+
+<changeSet id="20-modify-documents-link-columns" author="disha">
+
+    <!-- Change datatype of sessionDate -->
+    <modifyDataType 
+        tableName="documents"
+        columnName="documentLink"
+        newDataType="LONGTEXT"/>
+
+    
+</changeSet>
+
+<changeSet id="add-stripe-fields-to-invoices" author="disha">
+    <addColumn tableName="invoices">
+
+        <column name="stripeSessionId" type="VARCHAR(255)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="stripePaymentIntentId" type="VARCHAR(255)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="paymentStatus" type="VARCHAR(50)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="paymentMethod" type="VARCHAR(50)">
+            <constraints nullable="true"/>
+        </column>
+
+        <column name="paidAt" type="DATETIME">
+            <constraints nullable="true"/>
+        </column>
+
+    </addColumn>
+</changeSet>
+
+<changeSet id="add-additional-fields-to-users-tasks-clients" author="disha">
+    <addColumn tableName="clients">
+        <column name="occupation" type="VARCHAR(100)">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+    <addColumn tableName="users">
+        <column name="gender" type="VARCHAR(100)">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+    <addColumn tableName="tasks">
+        <column name="priority" type="VARCHAR(100)">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+</changeSet>
+
+<changeSet id="Add-userId-to-clients" author="disha">
+
+    <!-- Add lawyerId column to cases -->
+    <addColumn tableName="clients">
+        <column name="userId" type="INT"/>
+    </addColumn>
+
+    <!-- Add foreign key from cases.lawyerId -> lawyers.id -->
+    <addForeignKeyConstraint
+        baseTableName="clients"
+        baseColumnNames="userId"
+        referencedTableName="users"
+        referencedColumnNames="id"
+        constraintName="fk_clients_userId"/>
+</changeSet>
+
+<changeSet id="fk-task-on-delete-null" author="disha">
+      
+    <addForeignKeyConstraint
+        baseTableName="staff"
+        baseColumnNames="taskId"
+        referencedTableName="tasks"
+        referencedColumnNames="id"
+        constraintName="sk_staff_task"
+        onDelete="SET NULL"/>
+
+</changeSet>
+
+<changeSet id="4-make-name-nullable" author="disha">
+
+    <dropNotNullConstraint
+            tableName="users"
+            columnName="name"
+            columnDataType="VARCHAR(255)"/>
+
+</changeSet>
+
+<changeSet id="18-add-unique-caseNumber-cases" author="disha">
+
+    <addUniqueConstraint
+        tableName="cases"
+        columnNames="caseNumber"/>
+
+</changeSet>
+<changeSet id="add-dueDate-to-tasks" author="disha">
+    
+    <addColumn tableName="tasks">
+        <column name="dueDate" type="DATETIME">
+            <constraints nullable="true"/>
+        </column>
+    </addColumn>
+
+</changeSet>
+<changeSet id="add-default-status-pending" author="disha">
+
+    <addDefaultValue 
+        tableName="tasks"
+        columnName="status"
+        defaultValue="pending"/>
+
+</changeSet>
+<changeSet id="modify-dueDate-to-date" author="disha">
+
+    <modifyDataType 
+        tableName="tasks"
+        columnName="dueDate"
+        newDataType="DATE"/>
+
+    <rollback>
+        <modifyDataType 
+            tableName="tasks"
+            columnName="dueDate"
+            newDataType="DATETIME"/>
+    </rollback>
+
+</changeSet>
+
+<changeSet id="modify-caseClosedDate-to-date" author="disha">
+
+    <modifyDataType 
+        tableName="cases"
+        columnName="caseClosedDate"
+        newDataType="DATE"/>
+
+    <rollback>
+        <modifyDataType 
+            tableName="cases"
+            columnName="caseClosedDate"
+            newDataType="DATETIME"/>
+    </rollback>
+
+</changeSet>
+<changeSet id="drop-status-from-invoices" author="disha">
+<dropColumn 
+        tableName="invoices"
+        columnName="status"/>
+
+</changeSet>
+<changeSet id="add-status-to-invoices" author="disha">
+
+    <addColumn tableName="invoices">
+
+        <column name="status" type="VARCHAR(250)" defaultValue="pending">
+            <constraints nullable="false"/>
+        </column>
+
+    </addColumn>
+
+</changeSet>
+<changeSet id="add-isDeleted-in-tables" author="disha">
+
+    <addColumn tableName="invoices">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+    <addColumn tableName="documents">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+    <addColumn tableName="tasks">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+    <addColumn tableName="caseStatusHistories">
+        <column name="isDeleted" type="BOOLEAN"
+                defaultValueBoolean="false"/>
+    </addColumn>
+</changeSet>
+</databaseChangeLog>

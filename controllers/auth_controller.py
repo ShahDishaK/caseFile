@@ -1,18 +1,20 @@
-# Importing libraries
-from dtos.auth_models import TokenModel
-from dtos.base_response_model import BaseResponseModel
-from helper.api_helper import APIHelper
+from sqlalchemy.orm import Session
+from models.users_table import User
+from passlib.context import CryptContext
+from fastapi.security import OAuth2PasswordRequestForm
 from helper.token_helper import TokenHelper
-from helper.hashing import Hash
-from fastapi.security.oauth2 import OAuth2PasswordRequestForm
-
+from helper.api_helper import APIHelper
+from dtos.auth_models import UserModel as CreateUserRequest
+from helper.validation_helper import ValidationHelper
 
 class AuthController:
-    def login(request: OAuth2PasswordRequestForm) -> BaseResponseModel:
-        user = Hash.authenticate_user(
-            username=request.username, password=request.password)
-        access_token = TokenHelper.create_access_token(
-            data={"id": user.id}
-        )
-        response = TokenModel(access_token=access_token, **user.__dict__)
-        return APIHelper.send_success_response(data=response, successMessageKey='translations.LOGIN_SUCCESS')
+    
+    def login_for_access_token(
+        form_data: OAuth2PasswordRequestForm ,
+        db: Session
+    ):
+        user = ValidationHelper.authenticate_user(form_data.username, form_data.password, db)
+        if not user:
+            APIHelper.send_unauthorized_error(errorMessageKey='translations.UNAUTHORIZED')
+        token = TokenHelper.create_access_token({'sub':user.email,'id': user.id, 'role':user.role})
+        return {'access_token': token, 'token_type': 'bearer'}

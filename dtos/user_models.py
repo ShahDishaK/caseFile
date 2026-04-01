@@ -1,14 +1,19 @@
 from typing import Optional
-from pydantic import BaseModel, validator
-from dtos.auth_models import UserModel
-from helper.validation_helper import ValidationHelper
+from pydantic import BaseModel, Field, constr
 
-
-class CreateUserModel(BaseModel):
-    email: str
+class UserVerification(BaseModel):
     password: str
-    is_admin: Optional[bool] = 0
-    _email = validator("email", allow_reuse=True)(
-        ValidationHelper.is_valid_email)
-    _password = validator("password", allow_reuse=True)(
-        ValidationHelper.is_valid_email)
+    new_password: str = Field(min_length=3)
+
+class ForgotPassword(BaseModel):
+    email:str
+    new_password:str
+
+class UpdateUserProfile(BaseModel):
+    name: Optional[str] = None
+    firstName: Optional[str] = None
+    lastName: Optional[str] = None
+    phoneNumber: Optional[constr(regex="^[0-9]{10}$")] = None
+    address: Optional[str] = None
+    gender: Optional[str] = None
+
