@@ -2,7 +2,7 @@
 from sqlalchemy import desc
 from dtos.auth_models import UserModel
 from helper.validation_helper import ValidationHelper
-from models.users_table import User
+from models.users_table import User, UserRole
 from models.lawyers_table import Lawyers
 from helper.api_helper import APIHelper
 from models.staff_table import Staff
@@ -51,7 +51,7 @@ class StaffController:
                 )
 
     def read_all(user: UserModel, db: Session):
-        if user.role=="lawyer":
+        if user.role==UserRole.LAWYER:
         # get lawyer using logged in user
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
@@ -72,7 +72,7 @@ class StaffController:
                 }
                 for staff, user in staff    
             ]
-        elif user.role=="admin":
+        elif user.role==UserRole.ADMIN:
             staff=db.query(Staff,User).join(
                 User,Staff.user_id==User.id
             ).join(Lawyers,Staff.lawyerId==Lawyers.id).all()
@@ -93,7 +93,7 @@ class StaffController:
     ):
         staff_model = db.query(Staff).filter(Staff.id == staff_id).first()
         ValidationHelper.check_role_exists(staff_model,"STAFF")
-        if user.role=="lawyer":
+        if user.role==UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             # check lawyer exists
@@ -131,7 +131,7 @@ class StaffController:
                         }
                 except:
                     return APIHelper.send_bad_request_error(errorMessageKey="translations.DB_ERROR")
-        elif user.role=="admin":
+        elif user.role==UserRole.ADMIN:
             update_data = update_staff_request.dict(exclude_unset=True, exclude_none=True)
             for key, value in update_data.items():
                 if hasattr(staff_model, key):

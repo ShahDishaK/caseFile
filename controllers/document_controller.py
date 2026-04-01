@@ -1,5 +1,6 @@
 # Importing libraries
 from dtos.auth_models import UserModel
+from models.users_table import UserRole
 from helper.validation_helper import ValidationHelper
 from helper.api_helper import APIHelper
 from models.staff_table import Staff
@@ -30,7 +31,7 @@ class DocumentController:
         db
     ):
         #  LAWYER CHECK
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             # check lawyer exists
@@ -85,7 +86,7 @@ class DocumentController:
     #  READ ALL DOCUMENTS
     def read_all(user: UserModel, db: Session):
         # ------------------- LAWYER -------------------
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
                 Lawyers.isDeleted == 0
@@ -173,7 +174,7 @@ class DocumentController:
         ValidationHelper.check_role_exists(document,"DOCUMENT")
 
         # LAWYER CHECK
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             # check lawyer exists
@@ -239,7 +240,7 @@ class DocumentController:
         ValidationHelper.check_role_exists(document,"DOCUMENT")
 
         #  LAWYER
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
 
             # check lawyer exists

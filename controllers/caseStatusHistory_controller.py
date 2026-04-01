@@ -1,6 +1,6 @@
 from sqlalchemy import desc
-
 from dtos.auth_models import UserModel
+from models.users_table import UserRole
 from helper.validation_helper import ValidationHelper
 from models.lawyers_table import Lawyers
 from models.cases_table import Cases
@@ -48,7 +48,7 @@ class CaseController:
     #  READ ALL
     def read_all(user: UserModel, db: Session):
         # ================= LAWYER =================
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
@@ -106,7 +106,7 @@ class CaseController:
         db: Session
     ):
         # ================= LAWYER =================
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id

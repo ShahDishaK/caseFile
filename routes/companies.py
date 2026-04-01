@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 from starlette import status
 from config.db_config import get_db
+from models.users_table import UserRole
 from helper.validation_helper import ValidationHelper
 from helper.token_helper import TokenHelper
 from dtos.auth_models import UserModel
@@ -21,7 +22,7 @@ async def create_company(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["admin"],user) 
+    ValidationHelper.check_user_role([UserRole.ADMIN],user) 
     return CompanyController.create_company(request, user, db)
 
 
@@ -31,7 +32,7 @@ async def read_all(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["admin"],user) 
+    ValidationHelper.check_user_role([UserRole.ADMIN],user) 
     return CompanyController.read_all(user, db)
 
 
@@ -43,7 +44,7 @@ async def update_company(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["admin"], user)
+    ValidationHelper.check_user_role([UserRole.ADMIN], user)
     return CompanyController.update_company(company_id, request, user, db)
 
 @company.delete("/company/{company_id}", status_code=status.HTTP_200_OK)
@@ -53,5 +54,5 @@ async def delete_company(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["admin"],user)
+    ValidationHelper.check_user_role([UserRole.ADMIN],user)
     return CompanyController.delete_company(company_id, user, db)

@@ -7,6 +7,7 @@ from config.db_config import get_db
 from typing_extensions import Annotated
 from fastapi import APIRouter,Depends
 from starlette import status 
+from models.users_table import UserRole
 from helper.validation_helper import ValidationHelper
 from helper.token_helper import TokenHelper
 from controllers.document_controller import DocumentController
@@ -37,7 +38,7 @@ async def create_document(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["lawyer","staff"],user) 
+    ValidationHelper.check_user_role([UserRole.LAWYER, UserRole.STAFF],user) 
     return await DocumentController.create_document(
         title,
         fileType,
@@ -52,7 +53,7 @@ async def create_document(
 @document.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["lawyer", "staff"], user)
+    ValidationHelper.check_user_role([UserRole.LAWYER, UserRole.STAFF], user)
     return DocumentController.read_all(user,db)
 
 @document.patch("/document/{document_id}", status_code=status.HTTP_200_OK)
@@ -72,7 +73,7 @@ async def update_document(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["lawyer","staff"],user) 
+    ValidationHelper.check_user_role([UserRole.LAWYER, UserRole.STAFF],user) 
     return await DocumentController.update_document(
         document_id,
         title,
@@ -92,5 +93,5 @@ async def delete_document(
     db: Session = Depends(get_db)
 ):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["lawyer","staff"],user) 
+    ValidationHelper.check_user_role([UserRole.LAWYER, UserRole.STAFF],user) 
     return DocumentController.delete_document(document_id,user,db)

@@ -8,6 +8,7 @@ from dtos.auth_models import UserModel
 from typing_extensions import Annotated
 from fastapi import APIRouter,Depends
 from starlette import status 
+from models.users_table import UserRole
 from helper.validation_helper import ValidationHelper
 from helper.token_helper import TokenHelper
 from passlib.context import CryptContext
@@ -24,7 +25,7 @@ user_dependency=Annotated[dict,Depends(TokenHelper.get_current_user)]
 @router.get("/",status_code=status.HTTP_200_OK)
 async def read_all(user: UserModel = Depends(TokenHelper.get_current_user),db: Session = Depends(get_db)):
     ValidationHelper.check_user_exists(user)
-    ValidationHelper.check_user_role(["admin"],user) 
+    ValidationHelper.check_user_role([UserRole.ADMIN],user) 
     return UserController.read_all(user,db)
 
 @router.get("/profile",status_code=status.HTTP_200_OK)

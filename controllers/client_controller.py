@@ -1,9 +1,8 @@
 # Importing libraries
 from sqlalchemy import desc
-
 from dtos.auth_models import UserModel
 from helper.validation_helper import ValidationHelper
-from models.users_table import User
+from models.users_table import User, UserRole
 from models.staff_table import Staff
 from models.clients_table import Clients
 from models.lawyers_table import Lawyers
@@ -71,7 +70,7 @@ class ClientController:
 
     def read_all(user: UserModel, db: Session):
         #  LAWYER
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
             # check lawyer exists
             ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -101,7 +100,7 @@ class ClientController:
             )
 
         #  STAFF
-        elif user.role=="staff":
+        elif user.role==UserRole.STAFF:
             clients = db.query(Clients, User).join(
                 User, Clients.userId == User.id
             ).join(
@@ -130,7 +129,7 @@ class ClientController:
                 successMessageKey='translations.SUCCESS'
             )
         
-        elif user.role=="admin":
+        elif user.role==UserRole.ADMIN:
             clients = db.query(Clients, User).join(
                 User, Clients.userId == User.id
             ).all()
@@ -155,7 +154,7 @@ class ClientController:
         # check blocked
         ValidationHelper.block_check(client.isBlocked)
         #  LAWYER
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
             lawyer = db.query(Lawyers).filter(Lawyers.userId == user.id).first()
             # check lawyer exists
             ValidationHelper.check_role_exists(lawyer,"LAWYER")
@@ -167,7 +166,7 @@ class ClientController:
                 return APIHelper.send_forbidden_error(errorMessageKey='translations.NOT_ALLOWDED_TO_ACCESS_THIS_CLIENT')
 
         #  STAFF
-        elif user.role=="staff":
+        elif user.role==UserRole.STAFF:
             staff = db.query(Staff).filter(
                 Staff.user_id == user.id,
                 Staff.lawyerId == client.lawyerId,

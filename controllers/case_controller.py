@@ -1,6 +1,7 @@
 # Importing libraries
 from sqlalchemy import desc
 from dtos.auth_models import UserModel
+from models.users_table import UserRole
 from helper.validation_helper import ValidationHelper
 from models.documents_table import Documents
 from models.tasks_table import Tasks
@@ -63,7 +64,7 @@ class CaseController:
     #  READ ALL CASES
     def read_all(user: UserModel, db: Session):
         # ================= LAWYER =================
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
@@ -88,7 +89,7 @@ class CaseController:
             )
 
         # ================= STAFF =================
-        elif user.role == 'staff':
+        elif user.role == UserRole.STAFF:
 
             staff_records = db.query(Staff).filter(
                 Staff.user_id == user.id
@@ -132,7 +133,7 @@ class CaseController:
         ValidationHelper.check_role_exists(case,"CASE")
 
         # ================= LAWYER =================
-        if user.role == 'lawyer':
+        if user.role == UserRole.LAWYER:
 
             lawyer = db.query(Lawyers).filter(
                 Lawyers.userId == user.id,
@@ -149,7 +150,7 @@ class CaseController:
             ValidationHelper.check_authorization(case.lawyerId, lawyer.id, "CASE")
 
         # ================= STAFF =================
-        elif user.role == 'staff':
+        elif user.role == UserRole.STAFF:
 
             allowed = db.query(Cases).join(
                 Staff, Cases.id == Staff.caseId
